@@ -86,21 +86,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .header("Authorization", format!("Bearer {}", access_token_str))
                     .send()?;
                 
-                    if api_response.status().is_success() {
-                        let response_text = api_response.text()?;
-                        let messages: Mail = serde_json::from_str(&response_text)?;
-                
-                        println!("Gmail API Response (Tabular format):\n");
-                
-                        println!("{:<20}", "Message ID");
-                        println!("{:-<16}", "");
-                
-                        for message in &messages.messages {
-                            println!("{:<20}", message.id);
-                        }
-                    } else {
-                        eprintln!("Failed to fetch Gmail API data. Status code: {}", api_response.status());
+                if api_response.status().is_success() {
+                    let response_text = api_response.text()?;
+                    let messages: Mail = serde_json::from_str(&response_text)?;
+                        
+                    println!("{:<20}", "Message ID");
+                    println!("{:-<16}", "");
+            
+                    for message in &messages.messages {
+                        println!("{:<20}", message.id);
                     }
+                } else {
+                    eprintln!("Failed to fetch Gmail API data. Status code: {}", api_response.status());
+                }
             } else {
                 eprintln!("Access token is not a string.");
             }
