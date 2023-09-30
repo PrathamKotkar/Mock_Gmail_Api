@@ -3,9 +3,21 @@ use serde_json::Value;
 use tiny_http::{Server, Response};
 use url::Url;
 use open;
+use serde::{Deserialize, Serialize};
 
 const AUTH_URL: &str = "https://accounts.google.com/o/oauth2/auth";
 const TOKEN_URL: &str = "https://oauth2.googleapis.com/token";
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct Messages{
+    id : String,
+}
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct Mail{
+    messages: Vec<Messages>,
+}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let code_request_params = [
@@ -35,7 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut code = String::new();
 
     for request in server.incoming_requests() {
-        let response = Response::from_string("You can now close this window and return to the terminal.");
+        let response = Response::from_string("close this window and return to the terminal.");
 
         let redirected_url = request.url();
         code = extract_code_from_url("http://localhost:8080", redirected_url)?;
@@ -74,12 +86,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .header("Authorization", format!("Bearer {}", access_token_str))
                     .send()?;
                 
-                if api_response.status().is_success() {
-                    let messages: Value = api_response.json()?;
-                    println!("Gmail API Response: {:#?}", messages);
-                } else {
-                    eprintln!("Failed to fetch Gmail API data. Status code: {}", api_response.status());
-                }
+                    if api_response.status().is_success() {
+                        let response_text = api_response.text()?;
+                        let messages: Mail = serde_json::from_str(&response_text)?;
+                
+                        println!("Gmail API Response (Tabular format):\n");
+                
+                        println!("{:<20}", "Message ID");
+                        println!("{:-<16}", "");
+                
+                        for message in &messages.messages {
+                            println!("{:<20}", message.id);
+                        }
+                    } else {
+                        eprintln!("Failed to fetch Gmail API data. Status code: {}", api_response.status());
+                    }
             } else {
                 eprintln!("Access token is not a string.");
             }
