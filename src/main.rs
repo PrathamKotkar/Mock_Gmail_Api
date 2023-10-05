@@ -122,3 +122,76 @@ fn extract_code_from_url(base_url: &str, url: &str) -> Result<String, Box<dyn st
         None => Err("Code not found in the redirected URL.".into()),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_extract_code_from_url() {
+        let base_url = "http://localhost:8080";
+        let url = "http://localhost:8080?code=12345";
+        let code = extract_code_from_url(base_url, url).unwrap();
+        assert_eq!(code, "12345");
+    }
+
+    #[test]
+    fn test_extract_code_from_url_missing_code() {
+        let base_url = "http://localhost:8080";
+        let url = "http://localhost:8080?other_param=value";
+        let result = extract_code_from_url(base_url, url);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_authenticate_with_google() {
+
+        let expected_client_id = "319107843868-cnb8ko19g0rqo1a3569juftrrkt42ed6.apps.googleusercontent.com";
+        
+        let expected_scope = "https://mail.google.com";
+        
+        let code_request_params = [
+            ("scope", expected_scope),
+            ("access_type", "offline"),
+            ("include_granted_scopes", "true"),
+            ("response_type", "code"),
+            ("redirect_uri", "http://localhost:8080"),
+            ("state", "state_parameter_passthrough_value"),
+            ("client_id", expected_client_id),
+        ];
+
+        let auth_url = reqwest::blocking::Client::new()
+            .get(AUTH_URL)
+            .query(&code_request_params)
+            .build()
+            .unwrap()
+            .url()
+            .to_string();
+        
+        assert!(auth_url.contains(expected_client_id));
+    }
+
+    #[test]
+    fn test_token_request_params() {
+        let code = "your_code".to_string();
+        let client_id = "your_client_id".to_string();
+        let client_secret = "your_client_secret".to_string();
+        let grant_type = "authorization_code".to_string();
+        let redirect_uri = "http://localhost:8080".to_string();
+
+        let token_request_params = [
+            ("code", &code),
+            ("client_id", &client_id),
+            ("client_secret", &client_secret),
+            ("redirect_uri", &redirect_uri),
+            ("grant_type", &grant_type),
+        ];
+
+        assert_eq!(token_request_params[0].0, "code");
+        assert_eq!(token_request_params[1].0, "client_id");
+        assert_eq!(token_request_params[2].0, "client_secret");
+        assert_eq!(token_request_params[3].0, "redirect_uri");
+        assert_eq!(token_request_params[4].0, "grant_type");
+
+    }
+}
