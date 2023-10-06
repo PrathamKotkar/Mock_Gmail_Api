@@ -29,7 +29,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ("state", "state_parameter_passthrough_value"),
         (
             "client_id",
-            "319107843868-cnb8ko19g0rqo1a3569juftrrkt42ed6.apps.googleusercontent.com",
+            "YOUR_CLIENT_ID",
         ),
     ];
 
@@ -57,8 +57,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         break;
     }
 
-    let client_id = "319107843868-cnb8ko19g0rqo1a3569juftrrkt42ed6.apps.googleusercontent.com".to_string();
-    let client_secret = "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".to_string();
+    let client_id = "YOUR_CLIENT_ID".to_string();
+    let client_secret = "YOUR_CLIENT_SECRET".to_string();
     let grant_type = "authorization_code".to_string();
     let redirect_uri = "http://localhost:8080".to_string();
     let token_request_params = [
